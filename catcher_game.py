@@ -18,6 +18,7 @@ class CatcherGame(arcade.Window):
         self.player_list = None
         self.falling_objects_list = arcade.SpriteList()
         self.score = 0  # Score variable
+        self.lives = 4  # Lives variable
 
     def setup(self):
         """Set up the game and initialize variables."""
@@ -46,6 +47,8 @@ class CatcherGame(arcade.Window):
         # Draw instructions and score
         arcade.draw_text("Move with arrow keys!", 280, 570, arcade.color.WHITE, 16)
         arcade.draw_text(f"Score: {self.score}", 10, SCREEN_HEIGHT - 30, arcade.color.WHITE, 16)
+        arcade.draw_text(f"Lives: {self.lives}", SCREEN_WIDTH - 120, SCREEN_HEIGHT - 30, arcade.color.RED, 16)
+
 
     def on_update(self, delta_time):
         """Logic that updates every frame."""
@@ -71,6 +74,11 @@ class CatcherGame(arcade.Window):
         for obj in self.falling_objects_list:
             if obj.bottom < 0:
                 obj.remove_from_sprite_lists()
+                self.lives -= 1  # Decrease lives when missed
+
+            if self.lives <= 0:
+                arcade.close_window()
+                print(f"Game Over! Final Score: {self.score}")
 
     def on_key_press(self, key, modifiers):
         """Called when a key is pressed."""
