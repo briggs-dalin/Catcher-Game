@@ -74,17 +74,31 @@ class CatcherGame(arcade.Window):
         collisions = arcade.check_for_collision_with_list(self.player, self.falling_objects_list)
         for obj in collisions:
             obj.remove_from_sprite_lists()
-            self.score += 1  # Increase score when caught
 
-        # Remove objects that fall off the bottom and decrease lives
+            if obj.is_bad:
+                self.lives -= 1
+                print("Caught a BAD object!")
+            else:
+                self.score += 1
+                print("Caught a good object!")
+
+            if self.lives <= 0:
+                print(f"Game Over! Final Score: {self.score}")
+                arcade.close_window()
+
+
+        # Remove objects that fall off the bottom
         for obj in self.falling_objects_list:
             if obj.bottom < 0:
                 obj.remove_from_sprite_lists()
-                self.lives -= 1  # Lose 1 life per missed object
+                # Only lose life if the object is good
+                if not obj.is_bad:
+                    self.lives -= 1
 
                 if self.lives <= 0:
                     print(f"Game Over! Final Score: {self.score}")
                     arcade.close_window()
+
 
     def on_key_press(self, key, modifiers):
         """Called when a key is pressed."""
@@ -99,21 +113,35 @@ class CatcherGame(arcade.Window):
             self.player.change_x = 0
 
     def spawn_falling_object(self, delta_time: float):
-        """Create a new falling object at a random x-position at the top of the screen."""
+        """Create a new falling object with a type (good or bad)."""
         width = random.randint(15, 30)
         height = random.randint(15, 30)
-        color = (
-            random.randint(50, 255),
-            random.randint(50, 255),
-            random.randint(50, 255),
-            255
-        )  # Random bright color
+
+        # 25% chance the object is bad
+        is_bad = random.random() < 0.25
+
+        if is_bad:
+            color = (255, 60, 60, 255)  # Red = bad object
+        else:
+            color = (
+                random.randint(50, 255),
+                random.randint(50, 255),
+                random.randint(50, 255),
+                255
+            )
+
         x = random.randint(width // 2, SCREEN_WIDTH - width // 2)
-        y = SCREEN_HEIGHT + height // 2  # Start just above the screen
+        y = SCREEN_HEIGHT + height // 2
 
         obj = arcade.SpriteSolidColor(width, height, x, y, color)
-        obj.change_y = self.fall_speed  # Use the current falling speed
+        obj.change_y = self.fall_speed * (1.3 if is_bad else 1)
+
+
+        # Custom attribute
+        obj.is_bad = is_bad
+
         self.falling_objects_list.append(obj)
+
 
     def increase_difficulty(self, delta_time: float):
         """Make the game slightly harder by increasing fall speed."""
